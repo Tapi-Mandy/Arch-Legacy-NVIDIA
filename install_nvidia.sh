@@ -130,13 +130,33 @@ elif [ -d /boot/loader/entries ]; then
     done
 fi
 
-# 7. Finalize
+# 7. Finalize & Reboot
 echo -e "${GREEN}>>> Driver installation complete!${NC}"
 read -p "Would you like to reboot now? (y/n) " -n 1 -r </dev/tty
 echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo -e "${GREEN}>>> Rebooting...${NC}"
-    # The -i flag ignores Cinnamon/GNOME/KDE inhibitors
-    systemctl reboot -i || reboot -f
+    echo -e "${GREEN}>>> Initializing reboot sequence...${NC}"
+
+    # Check if systemd is running
+    if pidof systemd >/dev/null; then
+        echo -e "${GREEN}>>> Systemd detected...${NC}"
+        echo -e "${GREEN}>>> Rebooting...${NC}"
+        systemctl reboot -i
+    # Check for OpenRC
+    elif [ -x /sbin/openrc-shutdown ]; then
+        echo -e "${GREEN}>>> OpenRC detected...${NC}"
+        echo -e "${GREEN}>>> Rebooting...${NC}"
+        openrc-shutdown --reboot now
+    # Check for Runit (Artix way)
+    elif [ -x /usr/bin/66 ] || [ -x /usr/bin/runit ]; then
+        echo -e "${GREEN}>>> Runit/66 detected...${NC}"
+        echo -e "${GREEN}>>> Rebooting...${NC}"
+        reboot
+    # Universal Fallback (Works on almost everything)
+    else
+        echo -e "${GREEN}>>> Using universal fallback...${NC}"
+        echo -e "${GREEN}>>> Rebooting...${NC}"
+        reboot -f
+    fi
 fi
