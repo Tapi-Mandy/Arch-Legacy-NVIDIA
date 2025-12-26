@@ -108,7 +108,9 @@ fi
 
 # 7. Finalize
 echo -e "${GREEN}>>> Driver installation complete!${NC}"
-read -p "Would you like to reboot now? (y/n) " -n 1 -r
+read -p "Would you like to reboot now? (y/n) " -n 1 -r </dev/tty
+echo "" 
+
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    reboot
+    sudo reboot
 fi
