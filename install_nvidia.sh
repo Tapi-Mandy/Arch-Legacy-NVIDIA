@@ -43,8 +43,16 @@ fi
 
 # 2. Handle Conflicts (The "Cleanup" Phase)
 echo -e "${GREEN}>>> Checking for conflicting NVIDIA drivers...${NC}"
-# This removes the standard (non-legacy) utils/drivers if they exist
-for pkg in nvidia nvidia-utils lib32-nvidia-utils; do
+CONFLICTS=(
+    "nvidia" 
+    "nvidia-utils" 
+    "lib32-nvidia-utils" 
+    "nvidia-open" 
+    "nvidia-open-dkms" 
+    "nvidia-dkms"
+)
+
+for pkg in "${CONFLICTS[@]}"; do
     if pacman -Qs "$pkg" > /dev/null; then
         echo -e "${GREEN}>>> Removing conflicting package: $pkg...${NC}"
         sudo pacman -Rdd "$pkg" --noconfirm
