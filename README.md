@@ -31,7 +31,7 @@ An automated deployment script for Arch Linux users with NVIDIA GPUs that are no
 
 > Run this command to download and execute the installer:
 ```bash
-curl -s [https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh](https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh) | bash
+curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
 ```
 
 >[!IMPORTANT]
@@ -54,7 +54,7 @@ curl -s [https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/in
 ### How to run it:
 > Run this command to download and execute the GPU checker:
 ```bash
-curl -s [https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh](https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh) | bash
+curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh" | bash
 ```
 
 ---
