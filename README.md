@@ -39,7 +39,7 @@ curl -s [https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/in
 
 ---
 
-## 🔍 `check_gpu.sh`
+### 🔍 `check_gpu.sh`
 
 #### Once you have rebooted, it is highly recommended to run the GPU checker designed with this script in mind.
 #### This tool performs a deep check of your graphics stack to ensure the legacy cards are actually doing the work.
