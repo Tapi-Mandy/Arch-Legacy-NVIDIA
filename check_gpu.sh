@@ -5,8 +5,51 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+echo -e "${GREEN}"
+echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "                      @@@@        @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "                @@@@@@@@@@             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "            @@@@@@@@      @@@@@@@@         @@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "         @@@@@@@          @@@@@@@@@@@@        @@@@@@@@@@@@@@@@@@@@@@@"
+echo "      @@@@@@@         @@@@       @@@@@@@@       @@@@@@@@@@@@@@@@@@@@@"
+echo "   @@@@@@@       @@@@@@@@@          @@@@@@@       @@@@@@@@@@@@@@@@@@@"
+echo " @@@@@@@       @@@@@@     @@@          @@@@@@       @@@@@@@@@@@@@@@@@"
+echo "@@@@@@@     @@@@@@@       @@@@@       @@@@@@@       @@@@@@@@@@@@@@@@@"
+echo " @@@@@@@     @@@@@        @@@@@@    @@@@@@@       @@@@@@@@@@@@@@@@@@@"
+echo "  @@@@@@@     @@@@@       @@@@@@@@@@@@@@@       @@@@@@@@@@@@@@@@@@@@@"
+echo "   @@@@@@@     @@@@@      @@@@@@@@@@@@@       @@@@@@@@    @@@@@@@@@@@"
+echo "     @@@@@@     @@@@@@    @@@@@@@@@@@      @@@@@@@@@          @@@@@@@"
+echo "      @@@@@@@     @@@@@@@ @@@@@@@       @@@@@@@@@              @@@@@@"
+echo "        @@@@@@@      @@@@@           @@@@@@@@@              @@@@@@@@@"
+echo "          @@@@@@@         @@@@@@@@@@@@@@@@@              @@@@@@@@@@@@"
+echo "            @@@@@@@@      @@@@@@@@@@@@              @@@@@@@@@@@@@@@@@"
+echo "               @@@@@@@@@@@                     @@@@@@@@@@@@@@@@@@@@@@"
+echo "                    @@@@@@             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+echo -e "${NC}"
+
+# --- Dependency Auto-Install ---
+# We check for glxinfo (mesa-utils) and vulkaninfo (vulkan-tools)
+DEPENDENCIES=("mesa-utils" "vulkan-tools")
+MISSING_DEPS=()
+
+for dep in "${DEPENDENCIES[@]}"; do
+    if ! pacman -Qs "$dep" > /dev/null; then
+        MISSING_DEPS+=("$dep")
+    fi
+done
+
+if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+    echo -e "${GREEN}>>> Installing missing tools: ${MISSING_DEPS[*]}${NC}"
+    # --needed prevents re-installing if already there
+    # --noconfirm bypasses the [Y/n] prompts
+    sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}" > /dev/null 2>&1
+fi
+
 echo -e "${GREEN}>>> NVIDIA Legacy Driver Checker${NC}"
-echo "------------------------------------------------"
+echo "-------------------------------------------------------------"
 
 # 1. Driver Module Check
 echo -ne "${GREEN}[*] Kernel Modules: ${NC}"
@@ -28,6 +71,7 @@ fi
 
 # 3. OpenGL Rendering Check
 echo -ne "${GREEN}[*] OpenGL Vendor:  ${NC}"
+# Since we auto-installed, glxinfo should definitely exist now
 if command -v glxinfo &> /dev/null; then
     VENDOR=$(glxinfo | grep "OpenGL vendor string" | cut -d: -f2 | xargs)
     if [[ "$VENDOR" == *"NVIDIA"* ]]; then
@@ -36,16 +80,17 @@ if command -v glxinfo &> /dev/null; then
         echo -e "${RED}$VENDOR (Warning: Not using NVIDIA!)${NC}"
     fi
 else
-    echo -e "mesa-utils missing (sudo pacman -S mesa-utils)"
+    echo -e "${RED}ERROR: glxinfo failed to install.${NC}"
 fi
 
 # 4. Vulkan Capability
 echo -ne "${GREEN}[*] Vulkan Device:  ${NC}"
 if command -v vulkaninfo &> /dev/null; then
+    # Head -n 2 handles cases where multiple GPUs exist
     V_DEV=$(vulkaninfo --summary | grep "deviceName" | head -n 1 | cut -d: -f2 | xargs)
     echo -e "$V_DEV"
 else
-    echo -e "vulkan-tools missing (sudo pacman -S vulkan-tools)"
+    echo -e "${RED}ERROR: vulkaninfo failed to install.${NC}"
 fi
 
 # 5. 32-Bit (Multilib) Check
@@ -56,5 +101,5 @@ else
     echo -e "${RED}MISSING (Steam will not work)${NC}"
 fi
 
-echo "------------------------------------------------"
+echo "-------------------------------------------------------------"
 echo -e "${GREEN}>>> Checking complete.${NC}"
