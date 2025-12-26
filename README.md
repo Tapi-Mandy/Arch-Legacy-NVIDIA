@@ -22,7 +22,7 @@ curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/in
 ---
 
 ### ➥ `check_gpu.sh`
-#### Once you have rebooted, it is highly recommended to run the GPU checker designed with this script in mind.
+#### After rebooting, run the GPU checker made for this.
 > Run this command to execute the GPU checker:
 ```bash
 curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh" | bash
