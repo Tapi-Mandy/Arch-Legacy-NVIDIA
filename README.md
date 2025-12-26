@@ -34,6 +34,11 @@ An automated deployment script for Arch Linux users with NVIDIA GPUs that are no
 curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
 ```
 
+### ⚠️ Note on "Missing Firmware" Warnings
+>During installation, you may see a warning: `Possibly missing firmware for module: 'nvidia'`.
+
+>**This is normal.** The 580xx driver looks for GSP firmware used by newer RTX cards. Since Pascal (10-series) and Maxwell (900-series) do not use this firmware, the warning can be safely ignored.
+
 >[!IMPORTANT]
 >This script modifies critical system files, including /etc/pacman.conf, /etc/mkinitcpio.conf, and your bootloader configuration. While it includes safety backups, use this at your own risk. Always ensure you have a fallback (like a Live USB) to chroot into your system if something goes wrong.
 
