@@ -53,9 +53,10 @@ CONFLICTS=(
 )
 
 for pkg in "${CONFLICTS[@]}"; do
-    if pacman -Qs "$pkg" > /dev/null; then
-        echo -e "${GREEN}>>> Removing conflicting package: $pkg...${NC}"
-        sudo pacman -Rdd "$pkg" --noconfirm
+    # Check if package is installed; if yes, remove it quietly
+    if pacman -Qi "$pkg" &> /dev/null; then
+        echo -e "${GREEN}>>> Removing: $pkg${NC}"
+        sudo pacman -Rdd "$pkg" --noconfirm &> /dev/null
     fi
 done
 
