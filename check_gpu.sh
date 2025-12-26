@@ -49,7 +49,7 @@ if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
 fi
 
 echo -e "${GREEN}>>> NVIDIA Legacy Driver Checker${NC}"
-echo "-------------------------------------------------------------"
+echo "---------------------------------------------------------------------"
 
 # 1. Driver Module Check
 echo -ne "${GREEN}[*] Kernel Modules: ${NC}"
@@ -101,5 +101,5 @@ else
     echo -e "${RED}MISSING (Steam will not work)${NC}"
 fi
 
-echo "-------------------------------------------------------------"
+echo "---------------------------------------------------------------------"
 echo -e "${GREEN}>>> Checking complete.${NC}"
