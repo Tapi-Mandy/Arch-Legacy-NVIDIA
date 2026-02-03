@@ -84,7 +84,7 @@ for pkg in "${CONFLICTS[@]}"; do
     fi
 done
 
-# 2.5 Safety Cleanup (Prevent Black Screen)
+# 2.5 X11 Safety Cleanup
 echo -e "${GREEN}>>> Cleaning up legacy X11 configurations to prevent conflicts...${NC}"
 # Backup and remove the main xorg.conf if it exists
 if [ -f /etc/X11/xorg.conf ]; then
@@ -115,20 +115,80 @@ else
 fi
 sudo mkinitcpio -P
 
-# 6. Set Kernel Parameter for Modesetting
-echo -e "${GREEN}>>> Updating bootloader for DRM modesetting...${NC}"
+# 6. Set Kernel Parameter for Modesetting, fbdev, and IBT
+echo -e "${GREEN}>>> Determining optimal kernel parameters...${NC}"
+
+# Base parameters for NVIDIA Wayland
+K_PARAMS="nvidia_drm.modeset=1 nvidia_drm.fbdev=1"
+
+# Auto-detect Intel 11th Gen or newer for IBT fix
+if grep -q "GenuineIntel" /proc/cpuinfo; then
+    if grep -qiE "i[3-9]-1[1-9]" /proc/cpuinfo || grep -qiE "Intel.* [1-9][1-9]th Gen" /proc/cpuinfo; then
+        echo -e "${GREEN}>>> Modern Intel CPU detected (11th Gen+). Adding ibt=off...${NC}"
+        K_PARAMS="$K_PARAMS ibt=off"
+    fi
+fi
+
+echo -e "${GREEN}>>> Applying parameters: $K_PARAMS${NC}"
+
+# --- BOOTLOADER DETECTION & CONFIGURATION ---
+# 6.1. GRUB
 if [ -f /etc/default/grub ]; then
+    echo -e "${GREEN}>>> Detected GRUB...${NC}"
     if ! grep -q "nvidia_drm.modeset=1" /etc/default/grub; then
-        sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="nvidia_drm.modeset=1 /' /etc/default/grub
+        sudo sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$K_PARAMS /" /etc/default/grub
         sudo grub-mkconfig -o /boot/grub/grub.cfg
     fi
+
+# 6.2. Systemd-boot (or sd-boot on Artix)
 elif [ -d /boot/loader/entries ]; then
+    echo -e "${GREEN}>>> Detected systemd-boot/sd-boot...${NC}"
     for entry in /boot/loader/entries/*.conf; do
         if ! grep -q "nvidia_drm.modeset=1" "$entry"; then
-            sudo sed -i '/^options / s/$/ nvidia_drm.modeset=1/' "$entry"
+            sudo sed -i "/^options / s/$/ $K_PARAMS/" "$entry"
         fi
     done
+
+# 6.3. Limine
+elif [ -f /boot/limine.cfg ] || [ -f /boot/limine/limine.cfg ]; then
+    echo -e "${GREEN}>>> Detected Limine...${NC}"
+    LIMINE_CONF=$( [ -f /boot/limine.cfg ] && echo "/boot/limine.cfg" || echo "/boot/limine/limine.cfg" )
+    if ! grep -q "nvidia_drm.modeset=1" "$LIMINE_CONF"; then
+        sudo sed -i "s/\(cmdline:.*\)/\1 $K_PARAMS/" "$LIMINE_CONF"
+    fi
+
+# 6.4. Syslinux
+elif [ -f /boot/syslinux/syslinux.cfg ]; then
+    echo -e "${GREEN}>>> Detected Syslinux...${NC}"
+    if ! grep -q "nvidia_drm.modeset=1" /boot/syslinux/syslinux.cfg; then
+        sudo sed -i "/APPEND / s/$/ $K_PARAMS/" /boot/syslinux/syslinux.cfg
+    fi
 fi
+
+# 6.5 Enable NVIDIA Power Management (Crucial for Wayland Sleep/Resume)
+echo -e "${GREEN}>>> Configuring NVIDIA Power Management for Suspend/Resume...${NC}"
+if pidof systemd >/dev/null; then
+    echo -e "${GREEN}>>> Systemd detected: Enabling nvidia-suspend/resume services...${NC}"
+    sudo systemctl enable nvidia-suspend.service nvidia-hibernate.service nvidia-resume.service
+elif command -v loginctl >/dev/null; then
+    echo -e "${GREEN}>>> elogind detected: Ensure your init scripts handle NVIDIA sleep hooks.${NC}"
+fi
+
+# 6.6 Setup Wayland Environment Variables
+echo -e "${GREEN}>>> Configuring environment for Wayland...${NC}"
+VAR_FILE="/etc/environment"
+ENV_VARS=(
+    "GBM_BACKEND=nvidia-drm"
+    "__GLX_VENDOR_LIBRARY_NAME=nvidia"
+    "LIBVA_DRIVER_NAME=nvidia"
+    "WLR_NO_HARDWARE_CURSORS=1"
+)
+
+for var in "${ENV_VARS[@]}"; do
+    if ! grep -q "$var" "$VAR_FILE"; then
+        echo "$var" | sudo tee -a "$VAR_FILE" > /dev/null
+    fi
+done
 
 # 7. Finalize & Reboot
 echo -e "${GREEN}>>> Driver installation complete!${NC}"
@@ -148,7 +208,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo -e "${GREEN}>>> OpenRC detected...${NC}"
         echo -e "${GREEN}>>> Rebooting...${NC}"
         openrc-shutdown --reboot now
-    # Check for Runit (Artix way)
+    # Check for Runit/66
     elif [ -x /usr/bin/66 ] || [ -x /usr/bin/runit ]; then
         echo -e "${GREEN}>>> Runit/66 detected...${NC}"
         echo -e "${GREEN}>>> Rebooting...${NC}"
