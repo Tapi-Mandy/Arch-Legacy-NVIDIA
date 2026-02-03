@@ -4,12 +4,23 @@
 
 ---
 
-### ➥ Drivers Installer
+### ➥ `install_nvidia.sh`
 
 > Run this command to execute the installer:
 ```bash
 curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
 ```
+
+#### This script automates the complex configuration required for modern Linux environments on legacy hardware:
+* **Init-Agnostic Design:** Works seamlessly on standard Arch and all Artix flavors (OpenRC, Runit, 66, S6).
+* **Intelligent Cleanup:** Purges conflicting drivers and legacy X11 snippets to ensure a clean, "black-screen-free" deployment.
+* **Full Xorg (X11) Optimization:** Enhances traditional desktop performance by enabling DRM modesetting for "tear-free" rendering and better resolution handling in X11.
+* **Wayland Optimization:** Automatically configures DRM modesetting, `fbdev`, and environment variables for a flicker-free Wayland experience.
+* **Compositor Compatibility:** Includes specific fixes for `wlroots` compositors (like MangoWC, Hyprland, and Sway), including the critical invisible hardware cursor patch.
+* **Intel IBT Patch:** Detects 11th Gen+ Intel CPUs and applies the `ibt=off` kernel parameter to prevent boot-time black screens.
+* **Universal Bootloader Logic:** Automatically detects and updates configurations for GRUB, systemd-boot, Limine, and Syslinux.
+
+> **Note:** This script is fully "Dual-Session" compatible. It prepares your system so you can switch between Xorg and Wayland without needing to reconfigure your drivers.
 
 ### Note on "Missing Firmware" Warnings
 >During installation, you may see a warning: `Possibly missing firmware for module: 'nvidia'`.
