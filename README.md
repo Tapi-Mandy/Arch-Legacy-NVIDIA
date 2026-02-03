@@ -14,7 +14,7 @@ curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/in
 #### This script automates the complex configuration required for modern Linux environments on legacy hardware:
 * **Init-Agnostic Design:** Works seamlessly on standard Arch and all Artix flavors (OpenRC, Runit, 66, S6).
 * **Intelligent Cleanup:** Purges conflicting drivers and legacy X11 snippets to ensure a clean, "black-screen-free" deployment.
-* **Full Xorg (X11) Optimization:** Enhances traditional desktop performance by enabling DRM modesetting for "tear-free" rendering and better resolution handling in X11.
+* **Xorg (X11) Optimization:** Enhances traditional desktop performance by enabling DRM modesetting for "tear-free" rendering and better resolution handling in X11.
 * **Wayland Optimization:** Automatically configures DRM modesetting, `fbdev`, and environment variables for a flicker-free Wayland experience.
 * **Compositor Compatibility:** Includes specific fixes for `wlroots` compositors (like MangoWC, Hyprland, and Sway), including the critical invisible hardware cursor patch.
 * **Intel IBT Patch:** Detects 11th Gen+ Intel CPUs and applies the `ibt=off` kernel parameter to prevent boot-time black screens.
