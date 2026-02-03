@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # =================================================================
 # REPO: Arch-Legacy-NVIDIA
 # DESCRIPTION: Automated installer for NVIDIA 580xx Legacy Drivers
@@ -33,7 +32,7 @@ echo "                    @@@@@@             @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo -e "${NC}"
-echo -e "${GREEN}>>> Initializing The Legacy NVIDIA Installer...${NC}"
+echo -e "${GREEN}>>> Legacy NVIDIA Drivers Installer...${NC}"
 
 # 1. Detect AUR Helper
 AUR_HELPER=""
