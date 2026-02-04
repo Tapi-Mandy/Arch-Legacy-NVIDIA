@@ -1,5 +1,6 @@
 #!/bin/bash
 set -euo pipefail
+main() {
 
 # =================================================================
 # REPO: Arch-Legacy-NVIDIA
@@ -239,3 +240,7 @@ fi
 
 # Ensures the script ends successfully even if no reboot was triggered
 exit 0
+}
+
+# Execute the script
+main "$@"
