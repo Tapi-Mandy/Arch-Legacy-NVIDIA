@@ -37,8 +37,10 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 
 >**This is normal.** The 580xx driver looks for GSP firmware used by newer RTX cards. Since Pascal (10-series) and Maxwell (900-series) do not use this firmware, the warning can be safely ignored.
 
->[!IMPORTANT]
->This script modifies critical system files, including /etc/pacman.conf, /etc/mkinitcpio.conf, and your bootloader configuration. Always ensure you have a fallback (like a Live USB) to chroot into your system if something goes wrong.
+> [!IMPORTANT]
+> This script **modifies critical system files**, including `/etc/pacman.conf`, `/etc/mkinitcpio.conf`, and your **bootloader configuration** (GRUB, Systemd-boot, Limine, or Syslinux). 
+>
+> You should always ensure you have a fallback (such as a Live USB) ready to `arch-chroot` into your system if the driver installation results in a "black screen" or boot failure.
 
 ---
 
