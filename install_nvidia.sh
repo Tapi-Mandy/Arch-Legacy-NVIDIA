@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+
 # =================================================================
 # REPO: Arch-Legacy-NVIDIA
 # DESCRIPTION: Automated installer for NVIDIA 580xx Legacy Drivers
@@ -85,16 +87,22 @@ done
 
 # 2.5 X11 Safety Cleanup
 echo -e "${GREEN}>>> Cleaning up legacy X11 configurations to prevent conflicts...${NC}"
+
 # Backup and remove the main xorg.conf if it exists
 if [ -f /etc/X11/xorg.conf ]; then
     echo -e "${GREEN}>>> Backing up /etc/X11/xorg.conf to /etc/X11/xorg.conf.bak${NC}"
     sudo mv /etc/X11/xorg.conf /etc/X11/xorg.conf.bak
 fi
 
-# Remove any NVIDIA-specific snippets in xorg.conf.d
-if ls /etc/X11/xorg.conf.d/*nvidia* 1> /dev/null 2>&1; then
+# Remove any NVIDIA-specific snippets in xorg.conf.d safely
+# Using a nullglob-style check to prevent 'ls' from erroring out under set -e
+shopt -s nullglob
+NVIDIA_CONFIGS=(/etc/X11/xorg.conf.d/*nvidia*)
+shopt -u nullglob
+
+if [ ${#NVIDIA_CONFIGS[@]} -gt 0 ]; then
     echo -e "${GREEN}>>> Removing old NVIDIA snippets from xorg.conf.d...${NC}"
-    sudo rm /etc/X11/xorg.conf.d/*nvidia*
+    sudo rm "${NVIDIA_CONFIGS[@]}"
 fi
 
 # 3. Update System and Install Kernel Headers
@@ -107,7 +115,8 @@ $AUR_HELPER -S --noconfirm nvidia-580xx-dkms nvidia-580xx-utils lib32-nvidia-580
 
 # 5. Configure Early KMS
 echo -e "${GREEN}>>> Configuring mkinitcpio for early module loading...${NC}"
-if grep -q "nvidia" /etc/mkinitcpio.conf; then
+# Checks specifically for "nvidia" as a whole word inside the MODULES line
+if grep -qE '^MODULES=.*\bnvidia\b' /etc/mkinitcpio.conf; then
     echo -e "${GREEN}>>> Modules already present. Regenerating...${NC}"
 else
     sudo sed -i 's/^MODULES=(/MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm /' /etc/mkinitcpio.conf
@@ -131,11 +140,23 @@ fi
 echo -e "${GREEN}>>> Applying parameters: $K_PARAMS${NC}"
 
 # --- BOOTLOADER DETECTION & CONFIGURATION ---
+
+# Helper function to add parameters safely
+add_param() {
+    local file=$1
+    local sed_cmd=$2
+    # Only add if nvidia_drm.modeset=1 isn't already there and file exists
+    if [ -f "$file" ] && ! grep -q "nvidia_drm.modeset=1" "$file"; then
+        sudo sed -i "$sed_cmd" "$file"
+        return 0
+    fi
+    return 1
+}
+
 # 6.1. GRUB
 if [ -f /etc/default/grub ]; then
     echo -e "${GREEN}>>> Detected GRUB...${NC}"
-    if ! grep -q "nvidia_drm.modeset=1" /etc/default/grub; then
-        sudo sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$K_PARAMS /" /etc/default/grub
+    if add_param "/etc/default/grub" "s/GRUB_CMDLINE_LINUX_DEFAULT=\"/GRUB_CMDLINE_LINUX_DEFAULT=\"$K_PARAMS /"; then
         sudo grub-mkconfig -o /boot/grub/grub.cfg
     fi
 
@@ -143,25 +164,19 @@ if [ -f /etc/default/grub ]; then
 elif [ -d /boot/loader/entries ]; then
     echo -e "${GREEN}>>> Detected systemd-boot/sd-boot...${NC}"
     for entry in /boot/loader/entries/*.conf; do
-        if ! grep -q "nvidia_drm.modeset=1" "$entry"; then
-            sudo sed -i "/^options / s/$/ $K_PARAMS/" "$entry"
-        fi
+        add_param "$entry" "/^options / s/$/ $K_PARAMS/"
     done
 
 # 6.3. Limine
 elif [ -f /boot/limine.cfg ] || [ -f /boot/limine/limine.cfg ]; then
     echo -e "${GREEN}>>> Detected Limine...${NC}"
-    LIMINE_CONF=$( [ -f /boot/limine.cfg ] && echo "/boot/limine.cfg" || echo "/boot/limine/limine.cfg" )
-    if ! grep -q "nvidia_drm.modeset=1" "$LIMINE_CONF"; then
-        sudo sed -i "s/\(cmdline:.*\)/\1 $K_PARAMS/" "$LIMINE_CONF"
-    fi
+    LIMINE_CONF=$([ -f /boot/limine.cfg ] && echo "/boot/limine.cfg" || echo "/boot/limine/limine.cfg")
+    add_param "$LIMINE_CONF" "s/\(cmdline:.*\)/\1 $K_PARAMS/"
 
 # 6.4. Syslinux
 elif [ -f /boot/syslinux/syslinux.cfg ]; then
     echo -e "${GREEN}>>> Detected Syslinux...${NC}"
-    if ! grep -q "nvidia_drm.modeset=1" /boot/syslinux/syslinux.cfg; then
-        sudo sed -i "/APPEND / s/$/ $K_PARAMS/" /boot/syslinux/syslinux.cfg
-    fi
+    add_param "/boot/syslinux/syslinux.cfg" "/APPEND / s/$/ $K_PARAMS/"
 fi
 
 # 6.5 Enable NVIDIA Power Management (Crucial for Wayland Sleep/Resume)
@@ -189,33 +204,38 @@ for var in "${ENV_VARS[@]}"; do
     fi
 done
 
-# 7. Finalize & Reboot
+# 7. Finalize & Exit
 echo -e "${GREEN}>>> Driver installation complete!${NC}"
+echo -e "${GREEN}>>> A reboot is required to load the new drivers and kernel parameters.${NC}"
 read -p "Would you like to reboot now? (y/n) " -n 1 -r </dev/tty
 echo ""
 
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo -e "${GREEN}>>> Initializing reboot sequence...${NC}"
 
-    # Check if systemd is running
+    # Check for systemd
     if pidof systemd >/dev/null; then
-        echo -e "${GREEN}>>> Systemd detected...${NC}"
-        echo -e "${GREEN}>>> Rebooting...${NC}"
+        echo -e "${GREEN}>>> Systemd detected... Rebooting...${NC}"
         systemctl reboot -i
+    
     # Check for OpenRC
     elif [ -x /sbin/openrc-shutdown ]; then
-        echo -e "${GREEN}>>> OpenRC detected...${NC}"
-        echo -e "${GREEN}>>> Rebooting...${NC}"
+        echo -e "${GREEN}>>> OpenRC detected... Rebooting...${NC}"
         openrc-shutdown --reboot now
-    # Check for Runit/66
+    
+    # Check for runit/66
     elif [ -x /usr/bin/66 ] || [ -x /usr/bin/runit ]; then
-        echo -e "${GREEN}>>> Runit/66 detected...${NC}"
-        echo -e "${GREEN}>>> Rebooting...${NC}"
+        echo -e "${GREEN}>>> Runit/66 detected... Rebooting...${NC}"
         reboot
-    # Universal Fallback (Works on almost everything)
+    
+    # Universal Fallback
     else
-        echo -e "${GREEN}>>> Using universal fallback...${NC}"
         echo -e "${GREEN}>>> Rebooting...${NC}"
         reboot -f
     fi
+else
+    echo -e "${GREEN}>>> Installation finished. Please reboot manually when ready.${NC}"
 fi
+
+# Ensures the script ends successfully even if no reboot was triggered
+exit 0
