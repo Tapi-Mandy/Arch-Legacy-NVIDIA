@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+main() {
 
 # Aesthetic Colors
 GREEN='\033[0;32m'
@@ -30,8 +32,8 @@ echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo -e "${NC}"
 
-# --- Dependency Auto-Install ---
-# We check for glxinfo (mesa-utils) and vulkaninfo (vulkan-tools)
+# --- Dependencies ---
+# Check for glxinfo (mesa-utils) and vulkaninfo (vulkan-tools)
 DEPENDENCIES=("mesa-utils" "vulkan-tools")
 MISSING_DEPS=()
 
@@ -43,9 +45,8 @@ done
 
 if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
     echo -e "${GREEN}>>> Installing missing tools: ${MISSING_DEPS[*]}${NC}"
-    # --needed prevents re-installing if already there
-    # --noconfirm bypasses the [Y/n] prompts
-    sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}" > /dev/null 2>&1
+    # Redirect only standard output, allowing the sudo prompt (stderr) to show
+    sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}" > /dev/null
 fi
 
 echo -e "${GREEN}>>> NVIDIA Legacy Driver Checker${NC}"
@@ -53,7 +54,7 @@ echo "---------------------------------------------------------------------"
 
 # 1. Driver Module Check
 echo -ne "${GREEN}[*] Kernel Modules: ${NC}"
-if lsmod | grep -q nvidia; then
+if lsmod | grep -q "^nvidia"; then
     echo -e "LOADED"
 else
     echo -e "${RED}NOT LOADED${NC}"
@@ -62,9 +63,8 @@ fi
 # 2. Hardware Identification
 echo -ne "${GREEN}[*] GPU Model:      ${NC}"
 if command -v nvidia-smi &> /dev/null; then
-    GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader)
-    DRIVER_VER=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader)
-    echo -e "$GPU_NAME (Driver: $DRIVER_VER)"
+    GPU_INFO=$(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null || echo "Error querying GPU")
+    echo -e "$GPU_INFO"
 else
     echo -e "${RED}nvidia-smi not found${NC}"
 fi
@@ -98,8 +98,12 @@ echo -ne "${GREEN}[*] 32-Bit Support: ${NC}"
 if pacman -Qs lib32-nvidia-580xx-utils &> /dev/null; then
     echo -e "INSTALLED (Ready for Steam/Wine)"
 else
-    echo -e "${RED}MISSING (Steam will not work)${NC}"
+    echo -e "${RED}MISSING (Steam/Wine will not work)${NC}"
 fi
 
 echo "---------------------------------------------------------------------"
 echo -e "${GREEN}>>> Checking complete.${NC}"
+}
+
+# Execute the script
+main "$@"
