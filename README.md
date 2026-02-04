@@ -4,11 +4,21 @@
 
 ---
 
+### ✔ Supported Hardware
+> This script is for users with the following architectures:
+
+* **Pascal:** GTX 1080 Ti, 1080, 1070, 1060, 1050, GT 1030, etc.
+* **Maxwell:** GTX 980 Ti, 980, 970, 960, 950, 750 Ti, 750.
+* **Volta:** TITAN V.
+* **Quadro:** P-series and M-series workstation cards.
+
+---
+
 ### ➥ `install_nvidia.sh`
 
 > Run this command to execute the installer:
 ```bash
-curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
+curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
 ```
 
 #### This script automates the complex configuration required for modern Linux environments on legacy hardware:
@@ -36,7 +46,7 @@ curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/in
 #### After rebooting, run the GPU checker made for this.
 > Run this command to execute the GPU checker:
 ```bash
-curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh" | bash
+curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/check_gpu.sh" | bash
 ```
 
 #### This tool checks your GPU and the legacy drivers to ensure that it's actually doing the work:
@@ -45,13 +55,3 @@ curl -s "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/ch
 * **OpenGL Provider:** Ensures the OS isn't accidentally falling back to integrated graphics.
 * **Vulkan Health:** Confirms that the Vulkan API is active.
 * **32-Bit Check:** Verifies that the `lib32` libraries are installed so Steam and Wine work correctly.
-
----
-
-### ✔ Supported Hardware
-> This script is for users with the following architectures:
-
-* **Pascal:** GTX 1080 Ti, 1080, 1070, 1060, 1050, GT 1030, etc.
-* **Maxwell:** GTX 980 Ti, 980, 970, 960, 950, 750 Ti, 750.
-* **Volta:** TITAN V.
-* **Quadro:** P-series and M-series workstation cards.
