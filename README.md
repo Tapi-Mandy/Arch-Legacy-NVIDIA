@@ -1,4 +1,4 @@
-# 👁️ 🟢 Arch Legacy NVIDIA Installer
+# Arch Legacy NVIDIA Installer 👁️ 🟢
 
 #### An automated deployment script for Arch Linux users with NVIDIA GPUs that are no longer supported by the latest (590+) driver branch. This script specifically targets the **580xx legacy branch** to restore performance and compatibility for Pascal, Maxwell, and Volta cards in ~~late 2025~~ 2026, and for the future.
 
