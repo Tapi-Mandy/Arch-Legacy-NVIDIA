@@ -15,7 +15,6 @@
 ---
 
 ### ➥ `install_nvidia.sh`
-
 > Run this command to execute the installer:
 ```bash
 curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nvidia.sh" | bash
@@ -64,6 +63,7 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 #### For users who prefer the open-source Nouveau driver, this script purges all proprietary NVIDIA remnants and optimizes the system for a high-performance, native open-source experience across all kernels, bootloaders, and init systems.
 
 ### ➥ `install_nouveau.sh`
+> Has not been tested, but.. Should work!
 
 > Run this command to install Nouveau and purge proprietary drivers:
 ```bash
