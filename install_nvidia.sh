@@ -106,9 +106,29 @@ if [ ${#NVIDIA_CONFIGS[@]} -gt 0 ]; then
     sudo rm "${NVIDIA_CONFIGS[@]}"
 fi
 
-# 3. Update System and Install Kernel Headers
-echo -e "${GREEN}>>> Ensuring kernel headers and build tools are present...${NC}"
-sudo pacman -Syu --needed --noconfirm base-devel linux-headers
+# 3. Update System and Install Correct Kernel Headers
+echo -e "${GREEN}>>> Detecting running kernel and installing matching headers...${NC}"
+CURRENT_KERNEL=$(uname -r)
+KERNEL_HEADERS="linux-headers" # Default for mainline
+
+if [[ "$CURRENT_KERNEL" == *"-lts"* ]]; then
+    KERNEL_HEADERS="linux-lts-headers"
+elif [[ "$CURRENT_KERNEL" == *"-zen"* ]]; then
+    KERNEL_HEADERS="linux-zen-headers"
+elif [[ "$CURRENT_KERNEL" == *"-hardened"* ]]; then
+    KERNEL_HEADERS="linux-hardened-headers"
+fi
+
+echo -e "${GREEN}>>> Running kernel: $CURRENT_KERNEL${NC}"
+echo -e "${GREEN}>>> Installing: base-devel and $KERNEL_HEADERS${NC}"
+
+sudo pacman -Syu --needed --noconfirm base-devel "$KERNEL_HEADERS"
+
+# IMPORTANT: Ensure the driver actually builds if headers were missing before
+if command -v dkms &> /dev/null; then
+    echo -e "${GREEN}>>> Triggering DKMS build for existing modules...${NC}"
+    sudo dkms autoinstall
+fi
 
 # 4. Install the 580xx Legacy Suite
 echo -e "${GREEN}>>> Installing 580xx driver suite via $AUR_HELPER...${NC}"
