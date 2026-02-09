@@ -40,7 +40,7 @@ if [[ "$K_RUNNING" == *"-lts"* ]]; then K_HEADERS="linux-lts-headers"
 elif [[ "$K_RUNNING" == *"-zen"* ]]; then K_HEADERS="linux-zen-headers"
 elif [[ "$K_RUNNING" == *"-hardened"* ]]; then K_HEADERS="linux-hardened-headers"; fi
 
-# 2. The Purge Phase (Universal NVIDIA Removal)
+# 2. Universal proprietary NVIDIA removal
 echo -e "${GREEN}>>> Purging all proprietary NVIDIA packages...${NC}"
 PROPRIETARY_PKGS=$(pacman -Qs nvidia | grep '^local/' | cut -d'/' -f2 | cut -d' ' -f1 | grep -v "nouveau" || true)
 if [ -n "$PROPRIETARY_PKGS" ]; then
