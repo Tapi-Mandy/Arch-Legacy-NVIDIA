@@ -76,4 +76,4 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 * **Nouveau Optimization:** Deploys the open-source Mesa stack and configures Early KMS for native-resolution rendering from the moment the kernel loads.
 * **Configuration Cleanup:** Wipes out NVIDIA-specific blacklists, environment variables, and legacy X11 snippets to restore system defaults.
 * **Bootloader Parameter Scrubbing:** Automatically detects and removes proprietary kernel flags from GRUB, systemd-boot, Limine, and Syslinux.
-* **Universal Kernel & Init Support:** Full parity with the main installer. Works on Mainline, LTS, Zen, and Hardened kernels across Systemd, OpenRC, Runit, and 66.
+* **Universal Kernel & Init Support:** Works on Mainline, LTS, Zen, and Hardened kernels across Systemd, OpenRC, Runit, and 66.
