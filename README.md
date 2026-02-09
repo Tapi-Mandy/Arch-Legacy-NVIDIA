@@ -21,14 +21,14 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 ```
 
 #### This script automates the complex configuration required for modern Linux environments on legacy hardware:
-* **Init-Agnostic Design:** Works seamlessly on standard Arch and all Artix flavors (OpenRC, Runit, 66, S6).
+* **Init-Agnostic:** Works seamlessly on standard Arch and all Artix flavors (OpenRC, Runit, 66, S6).
 * **All Kernels Ready:** Automatically detects and installs matching headers for the `linux (mainline)`, `linux-lts`, `linux-zen`, and `linux-hardened` kernels.
 * **Intelligent Cleanup:** Purges conflicting drivers and legacy X11 snippets to ensure a clean, "black-screen-free" deployment.
 * **Xorg (X11) Optimization:** Enhances traditional desktop performance by enabling DRM modesetting for "tear-free" rendering and better resolution handling in X11.
 * **Wayland Optimization:** Automatically configures DRM modesetting, `fbdev`, and environment variables for a flicker-free Wayland experience.
 * **Compositor Compatibility:** Includes specific fixes for `wlroots` compositors (like MangoWC, Hyprland, and Sway), including the critical invisible hardware cursor patch.
+* **Universal Bootloader Support:** Automatically detects and updates configurations for GRUB, systemd-boot, Limine, and Syslinux.
 * **Intel IBT Patch:** Detects 11th Gen+ Intel CPUs and applies the `ibt=off` kernel parameter to prevent boot-time black screens.
-* **Universal Bootloader Logic:** Automatically detects and updates configurations for GRUB, systemd-boot, Limine, and Syslinux.
 
 > **Note:** This script is fully "Dual-Session" compatible. It prepares your system so you can switch between Xorg and Wayland without needing to reconfigure your drivers.
 
