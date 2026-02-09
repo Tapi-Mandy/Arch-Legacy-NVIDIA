@@ -111,6 +111,13 @@ if [ ${#NVIDIA_CONFIGS[@]} -gt 0 ]; then
     sudo rm "${NVIDIA_CONFIGS[@]}"
 fi
 
+# 2.6 Blacklist Nouveau
+echo -e "${GREEN}>>> Creating Nouveau blacklist...${NC}"
+sudo bash -c 'cat <<EOF > /etc/modprobe.d/nouveau-blacklist.conf
+blacklist nouveau
+options nouveau modeset=0
+EOF'
+
 # 3. Update System and Install Correct Kernel Headers
 echo -e "${GREEN}>>> Detecting running kernel and installing matching headers...${NC}"
 
