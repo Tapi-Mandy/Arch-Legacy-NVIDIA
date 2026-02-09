@@ -113,26 +113,43 @@ fi
 
 # 3. Update System and Install Correct Kernel Headers
 echo -e "${GREEN}>>> Detecting running kernel and installing matching headers...${NC}"
-CURRENT_KERNEL=$(uname -r)
-KERNEL_HEADERS="linux-headers" # Default for mainline
 
-if [[ "$CURRENT_KERNEL" == *"-lts"* ]]; then
-    KERNEL_HEADERS="linux-lts-headers"
-elif [[ "$CURRENT_KERNEL" == *"-zen"* ]]; then
-    KERNEL_HEADERS="linux-zen-headers"
-elif [[ "$CURRENT_KERNEL" == *"-hardened"* ]]; then
-    KERNEL_HEADERS="linux-hardened-headers"
+# Detect kernel type
+K_RUNNING=$(uname -r)
+K_PKG="linux"
+K_HEADERS="linux-headers"
+
+if [[ "$K_RUNNING" == *"-lts"* ]]; then
+    K_PKG="linux-lts"
+    K_HEADERS="linux-lts-headers"
+elif [[ "$K_RUNNING" == *"-zen"* ]]; then
+    K_PKG="linux-zen"
+    K_HEADERS="linux-zen-headers"
+elif [[ "$K_RUNNING" == *"-hardened"* ]]; then
+    K_PKG="linux-hardened"
+    K_HEADERS="linux-hardened-headers"
 fi
 
-echo -e "${GREEN}>>> Running kernel: $CURRENT_KERNEL${NC}"
-echo -e "${GREEN}>>> Installing: base-devel and $KERNEL_HEADERS${NC}"
+echo -e "${GREEN}>>> Running kernel: $K_RUNNING${NC}"
+echo -e "${GREEN}>>> Installing: base-devel and $K_HEADERS${NC}"
 
-sudo pacman -Syu --needed --noconfirm base-devel "$KERNEL_HEADERS"
+# Update system and install headers
+sudo pacman -Syu --needed --noconfirm base-devel "$K_HEADERS"
 
-# IMPORTANT: Ensure the driver actually builds if headers were missing before
-if command -v dkms &> /dev/null; then
-    echo -e "${GREEN}>>> Triggering DKMS build for existing modules...${NC}"
-    sudo dkms autoinstall
+# Check if a kernel update was just downloaded (Pending Reboot)
+# We compare the version of the installed kernel package with the running kernel
+K_INSTALLED=$(pacman -Q "$K_PKG" | awk '{print $2}')
+
+if [[ "$K_RUNNING" != *"$K_INSTALLED"* ]]; then
+    echo -e "${GREEN}>>> NOTICE: A kernel update ($K_INSTALLED) was installed.${NC}"
+    echo -e "${GREEN}>>> Your running kernel is still $K_RUNNING.${NC}"
+    echo -e "${GREEN}>>> DKMS will finish building the driver automatically after you reboot.${NC}"
+else
+    if command -v dkms &> /dev/null; then
+        echo -e "${GREEN}>>> Triggering DKMS build...${NC}"
+        # Use '|| true' so a minor build warning doesn't trigger 'set -e' and kill the script
+        sudo dkms autoinstall || echo -e "${GREEN}>>> DKMS build had a notice, but continuing...${NC}"
+    fi
 fi
 
 # 4. Install the 580xx Legacy Suite
