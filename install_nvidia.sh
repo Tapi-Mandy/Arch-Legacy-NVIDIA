@@ -67,8 +67,12 @@ else
     echo -e "${GREEN}>>> [multilib] is already enabled.${NC}"
 fi
 
-# 2. Handle Conflicts (The "Cleanup" Phase)
+# 2. Handle Conflicts
 echo -e "${GREEN}>>> Checking for conflicting NVIDIA drivers...${NC}"
+
+# Pre-authenticate sudo so it doesn't timeout or fail silently in the loop
+sudo -v
+
 CONFLICTS=(
     "nvidia" 
     "nvidia-utils" 
@@ -79,10 +83,11 @@ CONFLICTS=(
 )
 
 for pkg in "${CONFLICTS[@]}"; do
-    # Check if package is installed; if yes, remove it quietly
+    # Check if package is installed
     if pacman -Qi "$pkg" &> /dev/null; then
         echo -e "${GREEN}>>> Removing: $pkg${NC}"
-        sudo pacman -Rdd "$pkg" --noconfirm &> /dev/null
+        # '|| true' so that if removal fails, the script doesn't crash
+        sudo pacman -Rdd "$pkg" --noconfirm &> /dev/null || true
     fi
 done
 
