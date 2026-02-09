@@ -1,11 +1,13 @@
 #!/bin/bash
 set -euo pipefail
-main() {
 
-# Aesthetic Colors
+main() {
+# NVIDIA Color Palette
 GREEN='\033[0;32m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' 
 
 echo -e "${GREEN}"
 echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
@@ -32,78 +34,73 @@ echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo "                          @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 echo -e "${NC}"
 
-# --- Dependencies ---
-# Check for glxinfo (mesa-utils) and vulkaninfo (vulkan-tools)
-DEPENDENCIES=("mesa-utils" "vulkan-tools")
-MISSING_DEPS=()
-
-for dep in "${DEPENDENCIES[@]}"; do
+# --- Dependency Check ---
+# (Ensures tools exist before running checks)
+deps=("mesa-utils" "vulkan-tools" "pciutils")
+for dep in "${deps[@]}"; do
     if ! pacman -Qs "$dep" > /dev/null; then
-        MISSING_DEPS+=("$dep")
+        echo -e "${YELLOW}>>> Installing $dep for diagnostics...${NC}"
+        sudo pacman -S --needed --noconfirm "$dep" > /dev/null
     fi
 done
 
-if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
-    echo -e "${GREEN}>>> Installing missing tools: ${MISSING_DEPS[*]}${NC}"
-    # Redirect only standard output, allowing the sudo prompt (stderr) to show
-    sudo pacman -S --needed --noconfirm "${MISSING_DEPS[@]}" > /dev/null
-fi
-
-echo -e "${GREEN}>>> NVIDIA Legacy Driver Checker${NC}"
+echo -e "${GREEN}>>> NVIDIA Legacy Driver Diagnostic Tool${NC}"
 echo "---------------------------------------------------------------------"
 
-# 1. Driver Module Check
-echo -ne "${GREEN}[*] Kernel Modules: ${NC}"
+# 1. Driver Identification (The core request)
+echo -ne "${GREEN}[*] Driver in Use:   ${NC}"
 if lsmod | grep -q "^nvidia"; then
-    echo -e "LOADED"
-else
-    echo -e "${RED}NOT LOADED${NC}"
-fi
-
-# 2. Hardware Identification
-echo -ne "${GREEN}[*] GPU Model:      ${NC}"
-if command -v nvidia-smi &> /dev/null; then
-    GPU_INFO=$(nvidia-smi --query-gpu=name,driver_version --format=csv,noheader 2>/dev/null || echo "Error querying GPU")
-    echo -e "$GPU_INFO"
-else
-    echo -e "${RED}nvidia-smi not found${NC}"
-fi
-
-# 3. OpenGL Rendering Check
-echo -ne "${GREEN}[*] OpenGL Vendor:  ${NC}"
-# Since we auto-installed, glxinfo should definitely exist now
-if command -v glxinfo &> /dev/null; then
-    VENDOR=$(glxinfo | grep "OpenGL vendor string" | cut -d: -f2 | xargs)
-    if [[ "$VENDOR" == *"NVIDIA"* ]]; then
-        echo -e "$VENDOR"
+    # Identify if it's the correct 580xx version
+    CUR_VER=$(modinfo -F version nvidia 2>/dev/null || echo "Unknown")
+    if [[ "$CUR_VER" == 580* ]]; then
+        echo -e "${GREEN}NVIDIA $CUR_VER (Legacy 580xx Active)${NC}"
     else
-        echo -e "${RED}$VENDOR (Warning: Not using NVIDIA!)${NC}"
+        echo -e "${YELLOW}NVIDIA $CUR_VER (Mismatched Version)${NC}"
     fi
+elif lsmod | grep -q "^nouveau"; then
+    echo -e "${BLUE}NOUVEAU (Open Source)${NC}"
+    echo -e "    ${YELLOW}Note: High-performance 3D is limited.${NC}"
 else
-    echo -e "${RED}ERROR: glxinfo failed to install.${NC}"
+    echo -e "${RED}NONE / UNKNOWN${NC}"
+    echo -e "    ${RED}Warning: No driver is controlling the GPU!${NC}"
 fi
 
-# 4. Vulkan Capability
-echo -ne "${GREEN}[*] Vulkan Device:  ${NC}"
-if command -v vulkaninfo &> /dev/null; then
-    # Head -n 2 handles cases where multiple GPUs exist
-    V_DEV=$(vulkaninfo --summary | grep "deviceName" | head -n 1 | cut -d: -f2 | xargs)
-    echo -e "$V_DEV"
+# 2. Hardware / PCI Status
+echo -ne "${GREEN}[*] GPU Hardware:    ${NC}"
+LSPCI_INFO=$(lspci -k | grep -A 2 -i "VGA" | grep "NVIDIA" || echo "No NVIDIA Hardware Detected")
+echo -e "$LSPCI_INFO"
+
+# 3. Package Integrity
+echo -ne "${GREEN}[*] Suite Installed: ${NC}"
+if pacman -Qs nvidia-580xx-utils > /dev/null; then
+    echo -e "YES (580xx suite present)"
 else
-    echo -e "${RED}ERROR: vulkaninfo failed to install.${NC}"
+    echo -e "${RED}NO (Drivers not found in pacman)${NC}"
 fi
 
-# 5. 32-Bit (Multilib) Check
-echo -ne "${GREEN}[*] 32-Bit Support: ${NC}"
-if pacman -Qs lib32-nvidia-580xx-utils &> /dev/null; then
-    echo -e "INSTALLED (Ready for Steam/Wine)"
+# 4. 32-Bit (Multilib) Check
+echo -ne "${GREEN}[*] 32-Bit Support:  ${NC}"
+if pacman -Qs lib32-nvidia-580xx-utils > /dev/null; then
+    echo -e "Ready (Steam/Wine supported)"
 else
-    echo -e "${RED}MISSING (Steam/Wine will not work)${NC}"
+    echo -e "${YELLOW}Missing (Steam/Wine will fail)${NC}"
 fi
+
+# 5. Rendering Engine
+echo -ne "${GREEN}[*] OpenGL Vendor:   ${NC}"
+VENDOR=$(glxinfo | grep "OpenGL vendor string" | cut -d: -f2 | xargs || echo "Error")
+if [[ "$VENDOR" == *"NVIDIA"* ]]; then
+    echo -e "$VENDOR"
+else
+    echo -e "${RED}$VENDOR (Hardware acceleration might be disabled)${NC}"
+fi
+
+echo -ne "${GREEN}[*] Vulkan Device:   ${NC}"
+V_DEV=$(vulkaninfo --summary | grep "deviceName" | head -n 1 | cut -d: -f2 | xargs || echo "Not Found")
+echo -e "$V_DEV"
 
 echo "---------------------------------------------------------------------"
-echo -e "${GREEN}>>> Checking complete.${NC}"
+echo -e "${GREEN}>>> Diagnostic complete.${NC}"
 }
 
-# Execute the script
 main "$@"
