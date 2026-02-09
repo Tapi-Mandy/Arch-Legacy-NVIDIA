@@ -7,7 +7,7 @@ main() {
 # DESCRIPTION: Automated installer for NVIDIA 580xx Legacy Drivers
 # =================================================================
 
-# Aesthetic Colors
+# NVIDIA Color Palette
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
