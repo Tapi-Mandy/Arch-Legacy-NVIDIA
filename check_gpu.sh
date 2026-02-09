@@ -47,28 +47,41 @@ done
 echo -e "${GREEN}>>> NVIDIA Legacy Driver Diagnostic Tool${NC}"
 echo "---------------------------------------------------------------------"
 
-# 1. Driver Identification (The core request)
+# 1. Driver Identification
 echo -ne "${GREEN}[*] Driver in Use:   ${NC}"
-if lsmod | grep -q "^nvidia"; then
-    # Identify if it's the correct 580xx version
-    CUR_VER=$(modinfo -F version nvidia 2>/dev/null || echo "Unknown")
+if [ -d /sys/module/nvidia ]; then
+    # Get version from sysfs or modinfo
+    CUR_VER=$(cat /sys/module/nvidia/version 2>/dev/null || modinfo -F version nvidia 2>/dev/null || echo "Loaded")
     if [[ "$CUR_VER" == 580* ]]; then
         echo -e "${GREEN}NVIDIA $CUR_VER (Legacy 580xx Active)${NC}"
     else
-        echo -e "${YELLOW}NVIDIA $CUR_VER (Mismatched Version)${NC}"
+        echo -e "${YELLOW}NVIDIA $CUR_VER (Active, but version check skipped)${NC}"
     fi
-elif lsmod | grep -q "^nouveau"; then
+elif [ -d /sys/module/nouveau ]; then
     echo -e "${BLUE}NOUVEAU (Open Source)${NC}"
     echo -e "    ${YELLOW}Note: High-performance 3D is limited.${NC}"
 else
     echo -e "${RED}NONE / UNKNOWN${NC}"
-    echo -e "    ${RED}Warning: No driver is controlling the GPU!${NC}"
+    echo -e "    ${RED}Warning: No kernel module detected!${NC}"
 fi
 
 # 2. Hardware / PCI Status
-echo -ne "${GREEN}[*] GPU Hardware:    ${NC}"
-LSPCI_INFO=$(lspci -k | grep -A 2 -i "VGA" | grep "NVIDIA" || echo "No NVIDIA Hardware Detected")
-echo -e "$LSPCI_INFO"
+# Extracts the model name cleanly
+echo -ne "${GREEN}[*] GPU Model:       ${NC}"
+GPU_NAME=$(lspci | grep -iE 'vga|3d' | grep -i nvidia | cut -d: -f3- | sed 's/^[[:space:]]*//')
+echo -e "$GPU_NAME"
+
+# Extracts exactly which driver is currently "clamping" onto the hardware
+echo -ne "${GREEN}[*] Kernel Driver:   ${NC}"
+K_DRIVER=$(lspci -k | grep -A 3 -iE 'vga|3d' | grep -i "NVIDIA" -A 3 | grep "Kernel driver in use" | cut -d: -f2 | xargs || echo "None")
+
+if [[ "$K_DRIVER" == "nvidia" ]]; then
+    echo -e "${GREEN}$K_DRIVER${NC}"
+elif [[ "$K_DRIVER" == "nouveau" ]]; then
+    echo -e "${BLUE}$K_DRIVER${NC} (Open Source)"
+else
+    echo -e "${RED}$K_DRIVER (No driver attached)${NC}"
+fi
 
 # 3. Package Integrity
 echo -ne "${GREEN}[*] Suite Installed: ${NC}"
