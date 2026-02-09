@@ -64,6 +64,8 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 
 ### ➥ `install_nouveau.sh`
 > Has not been tested, but.. Should work!
+> 
+> <sub>If there are any issues, email me at mandytapi@gmail.com or create a <a href="https://github.com/Tapi-Mandy/Arch-Legacy-NVIDIA/issues">GitHub Issue</a>.</sub>
 
 > Run this command to install Nouveau and purge proprietary drivers:
 ```bash
