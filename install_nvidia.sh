@@ -248,6 +248,7 @@ for var in "${ENV_VARS[@]}"; do
 done
 
 # 7. Finalize & Exit
+echo -e
 echo -e "${GREEN}>>> Driver installation complete!${NC}"
 echo -e "${GREEN}>>> A reboot is required to load the new drivers and kernel parameters.${NC}"
 read -p "Would you like to reboot now? (y/n) " -n 1 -r </dev/tty
