@@ -1,6 +1,6 @@
 # 👁️ 🟢 Arch Legacy NVIDIA Installer
 
-#### An automated deployment script for Arch Linux users with NVIDIA GPUs that are no longer supported by the latest (590+) driver branch. This script specifically targets the **580xx legacy branch** to restore performance and compatibility for Pascal, Maxwell, and Volta cards in late 2025, and for the future.
+#### An automated deployment script for Arch Linux users with NVIDIA GPUs that are no longer supported by the latest (590+) driver branch. This script specifically targets the **580xx legacy branch** to restore performance and compatibility for Pascal, Maxwell, and Volta cards in ~~late 2025~~ 2026, and for the future.
 
 ---
 
@@ -58,3 +58,20 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 *   **OpenGL Check:** Verifies that the NVIDIA vendor string is active so you don't accidentally fall back to software rendering or integrated graphics.
 *   **Vulkan Status:** Confirms the Vulkan API is working and correctly detects your GPU.
 *   **32-Bit Support:** Scans for the `lib32` libraries required to make Steam and Wine work.
+
+---
+
+#### For users who prefer the open-source Nouveau driver, this script purges all proprietary NVIDIA remnants and optimizes the system for a high-performance, native open-source experience across all kernels, bootloaders, and init systems.
+
+### ➥ `install_nouveau.sh`
+
+> Run this command to install Nouveau and purge proprietary drivers:
+```bash
+curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main/install_nouveau.sh" | bash
+```
+
+* **Proprietary Cleanup:** Scans and purges every trace of proprietary NVIDIA packages.
+* **Nouveau Optimization:** Deploys the open-source Mesa stack and configures Early KMS for native-resolution rendering from the moment the kernel loads.
+* **Configuration Cleanup:** Wipes out NVIDIA-specific blacklists, environment variables, and legacy X11 snippets to restore system defaults.
+* **Bootloader Parameter Scrubbing:** Automatically detects and removes proprietary kernel flags from GRUB, systemd-boot, Limine, and Syslinux.
+* **Universal Kernel & Init Support:** Full parity with the main installer. Works on Mainline, LTS, Zen, and Hardened kernels across Systemd, OpenRC, Runit, and 66.
