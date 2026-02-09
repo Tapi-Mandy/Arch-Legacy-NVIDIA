@@ -23,6 +23,7 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 
 #### This script automates the complex configuration required for modern Linux environments on legacy hardware:
 * **Init-Agnostic Design:** Works seamlessly on standard Arch and all Artix flavors (OpenRC, Runit, 66, S6).
+* **All Kernels Ready:** Automatically detects and installs matching headers for the `linux (mainline)`, `linux-lts`, `linux-zen`, and `linux-hardened` kernels.
 * **Intelligent Cleanup:** Purges conflicting drivers and legacy X11 snippets to ensure a clean, "black-screen-free" deployment.
 * **Xorg (X11) Optimization:** Enhances traditional desktop performance by enabling DRM modesetting for "tear-free" rendering and better resolution handling in X11.
 * **Wayland Optimization:** Automatically configures DRM modesetting, `fbdev`, and environment variables for a flicker-free Wayland experience.
@@ -52,8 +53,8 @@ curl -fsSL "https://raw.githubusercontent.com/Tapi-Mandy/Arch-Legacy-NVIDIA/main
 ```
 
 #### This tool checks your GPU and the legacy drivers to ensure that it's actually doing the work:
-* **Kernel Status:** Confirms the `580xx` modules are loaded into the Linux kernel.
-* **Hardware ID:** Pulls the specific model and driver version from the hardware.
-* **OpenGL Provider:** Ensures the OS isn't accidentally falling back to integrated graphics.
-* **Vulkan Health:** Confirms that the Vulkan API is active.
-* **32-Bit Check:** Verifies that the `lib32` libraries are installed so Steam and Wine work correctly.
+*   **Driver Detection:** Checks if the `580xx` modules are loaded and identifies if you're currently running on the proprietary drivers or Nouveau or with no drivers at all.
+*   **Hardware Mapping:** Shows your GPU model and verifies the hardware is actually being controlled by the NVIDIA driver.
+*   **OpenGL Check:** Verifies that the NVIDIA vendor string is active so you don't accidentally fall back to software rendering or integrated graphics.
+*   **Vulkan Status:** Confirms the Vulkan API is working and correctly detects your GPU.
+*   **32-Bit Support:** Scans for the `lib32` libraries required to make Steam and Wine work.
